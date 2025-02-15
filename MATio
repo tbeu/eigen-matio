@@ -134,8 +134,12 @@ private:
       logowner = setval;
     return logowner;
   }
-  
+
+#if MATIO_VERSION >= 1527
+  static void log_func(int log_level, const char *message) {
+#else
   static void log_func(int log_level, char *message) {
+#endif
     std::lock_guard<std::mutex> guard(get_mutex());
     if (_logowner())
       _logowner()->_errstr << log_level << ":" << message << "\n";
@@ -177,9 +181,9 @@ public:
   }
 
   const std::string lasterr() { return _errstr.str(); }
-  
+
   mat_t * file() { return _file; }
-  
+
   explicit operator bool() const { return _file != NULL && _errstr.str().size() == 0; }
 
   int open(const char * filename,
@@ -332,7 +336,7 @@ private:
     mat_complex_split_t * cs = (mat_complex_split_t *)var->data;
     Eigen::Map<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic> >
       tmp_re((data_t *)cs->Re, var->dims[0], var->dims[1]);
-    Eigen::Map<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic> > 
+    Eigen::Map<Eigen::Matrix<data_t, Eigen::Dynamic, Eigen::Dynamic> >
       tmp_im((data_t *)cs->Im, var->dims[0], var->dims[1]);
 
     matrix.real() = tmp_re.template cast<Scalar>();
@@ -344,7 +348,7 @@ public:
   template <class Derived>
   int
   read_mat(const char * matname, Derived & matrix)
-  { 
+  {
     _errstr.clear();
     if (_written)
       reopen();
